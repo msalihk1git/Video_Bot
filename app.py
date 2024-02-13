@@ -1,17 +1,17 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_socketio import SocketIO
-from flask_cors import CORS  # Import CORS from the flask_cors extension
+from flask_cors import CORS
 import cv2
 import numpy as np
 import random
 import os
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-CORS(app)  # Add this line to enable CORS
+CORS(app)
 socketio = SocketIO(app)
 
 # Specified video path
-# video_path = r"C:\Users\msali\Program_Files\PersonalisedVideoNew\sample_video2.mp4"
 video_path = "sample_video2.mp4"
 
 def add_text_to_frame(frame, text, position, max_width, max_height, font_scale=1.0):
@@ -31,7 +31,6 @@ def add_text_to_frame(frame, text, position, max_width, max_height, font_scale=1
     cv2.putText(frame, text, (position_x, position_y), font, font_scale, font_color, font_thickness)
     return frame
 
-
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'mp4', 'avi', 'mov'}
 
@@ -45,76 +44,76 @@ def index():
 
 @app.route('/result')
 def result():
-    return render_template('result.html')
+    return render_template('result.html', video_path=None)
 
 @app.route('/process_video', methods=['POST'])
 def process_video():
     try:
-        # Check if the request is JSON
-        if request.is_json:
-            data = request.get_json()
-        else:
-            # If not JSON, try to get data from form
-            data = request.form.to_dict()
+        if 'videoFile' not in request.files:
+            return jsonify({"status": "error", "message": "No file provided"})
 
-        user_name = data.get('userName')
-        sender_phone_number = data.get('senderPhoneNumber')
+        file = request.files['videoFile']
 
-        # Validate user name
-        if not user_name:
-            return jsonify({"status": "error", "message": "Please enter your name"})
+        if file and allowed_file(file.filename):
+            uploaded_video_path = "static/uploaded_video.mp4"
+            file.save(uploaded_video_path)
 
-        # Validate file type
-        if os.path.isfile(video_path) and allowed_file(video_path):
-            cap = cv2.VideoCapture(video_path)
-            fps = cap.get(cv2.CAP_PROP_FPS)
+            video_path = uploaded_video_path
+            user_name = request.form.get('userName')
+            sender_phone_number = request.form.get('senderPhoneNumber')
 
-            modified_frames = []
+            if not user_name:
+                return jsonify({"status": "error", "message": "Please enter your name"})
 
-            possible_prizes = ["10% OFF ON FOOTWEAR", "20%OFFER ON JEANS", "50% OFFER ON INNERWEAR", "75% OFFER ON TOPWEAR", "25% OFF ON TELEVISION", "GIFT CARD", "45% OFFER ON TV"]
-            random_prize = random.choice(possible_prizes)
+            if os.path.isfile(video_path) and allowed_file(video_path):
+                cap = cv2.VideoCapture(video_path)
+                fps = cap.get(cv2.CAP_PROP_FPS)
 
-            while True:
-                ret, frame = cap.read()
+                modified_frames = []
 
-                if not ret:
-                    break
+                possible_prizes = ["10% OFF ON FOOTWEAR", "20% OFFER ON JEANS", "50% OFFER ON INNERWEAR", "75% OFFER ON TOPWEAR", "25% OFF ON TELEVISION", "GIFT CARD", "45% OFFER ON TV"]
+                random_prize = random.choice(possible_prizes)
 
-                start_time = 3
-                stop_time = 9
-                current_time = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000.0
+                while True:
+                    ret, frame = cap.read()
 
-                if start_time <= current_time <= stop_time:
-                    user_text_combined = f"{user_name}"
-                    prize_text_combined = f"You've won a {random_prize}"
+                    if not ret:
+                        break
 
-                    max_width = 316
-                    max_height = 75
+                    start_time = 3
+                    stop_time = 9
+                    current_time = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000.0
 
-                    frame = add_text_to_frame(frame, user_text_combined, (271, 864), max_width, max_height)
-                    frame = add_text_to_frame(frame, prize_text_combined, (271 , 899), max_width, max_height)
+                    if start_time <= current_time <= stop_time:
+                        user_text_combined = f"{user_name}"
+                        prize_text_combined = f"You've won a {random_prize}"
 
-                modified_frames.append(frame)
+                        max_width = 316
+                        max_height = 75
 
-            cap.release()
+                        frame = add_text_to_frame(frame, user_text_combined, (271, 864), max_width, max_height)
+                        frame = add_text_to_frame(frame, prize_text_combined, (271, 899), max_width, max_height)
 
-            if modified_frames:
-                output_video_path = "static/output_video.mp4"
-                out = cv2.VideoWriter(output_video_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (modified_frames[0].shape[1], modified_frames[0].shape[0]))
+                    modified_frames.append(frame)
 
-                for modified_frame in modified_frames:
-                    out.write(modified_frame)
+                cap.release()
 
-                out.release()
+                if modified_frames:
+                    output_video_path = "static/output_video.mp4"
+                    out = cv2.VideoWriter(output_video_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (modified_frames[0].shape[1], modified_frames[0].shape[0]))
 
-                # Emit a socket event to inform the WhatsApp client about the generated video
-                socketio.emit('video_generated', {'video_path': output_video_path, 'phone_number': sender_phone_number})    
+                    for modified_frame in modified_frames:
+                        out.write(modified_frame)
 
-                return jsonify({"status": "success", "message": "Video generation completed", "video_path": output_video_path})
-            else:
-                return jsonify({"status": "error", "message": "No frames to process"})
+                    out.release()
 
-        return jsonify({"status": "error", "message": "Invalid file type. Please provide a valid video."})
+                    socketio.emit('video_generated', {'video_path': output_video_path, 'phone_number': sender_phone_number})
+
+                    return render_template('result.html', video_path=output_video_path)
+                else:
+                    return jsonify({"status": "error", "message": "No frames to process"})
+
+            return jsonify({"status": "error", "message": "Invalid file type. Please provide a valid video."})
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
