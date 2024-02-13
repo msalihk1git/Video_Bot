@@ -12,7 +12,7 @@ CORS(app)
 socketio = SocketIO(app)
 
 # Specified video path
-video_path = "sample_video2.mp4"
+video_path = "https://pixelvideotesting.netlify.app/sample.mp4"
 
 def add_text_to_frame(frame, text, position, max_width, max_height, font_scale=1.0):
     font = cv2.FONT_HERSHEY_DUPLEX
