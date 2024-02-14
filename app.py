@@ -134,6 +134,7 @@ import numpy as np
 import random
 import os
 import tempfile
+import shutil
 
 app = Flask(__name__)
 CORS(app)
@@ -146,15 +147,12 @@ def add_text_to_frame(frame, text, position, max_width, max_height, font_scale=1
     font_thickness = 2
     font_color = (0, 0, 0)
 
-    # Get the width and height of the text bounding box
     (text_width, text_height), baseline = cv2.getTextSize(text, font, font_scale, font_thickness)
 
-    # Calculate the position to center the text within the specified area
     position_x, position_y = position
     position_x = int(position_x + (max_width - text_width) / 2)
     position_y = int(position_y + (max_height + text_height) / 2)
 
-    # Add text to the frame with the calculated font size and position
     cv2.putText(frame, text, (position_x, position_y), font, font_scale, font_color, font_thickness)
     return frame
 
@@ -196,49 +194,51 @@ def process_video():
             possible_prizes = ["10% OFF ON FOOTWEAR", "20%OFFER ON JEANS", "50% OFFER ON INNERWEAR", "75% OFFER ON TOPWEAR", "25% OFF ON TELEVISION", "GIFT CARD", "45% OFFER ON TV"]
             random_prize = random.choice(possible_prizes)
 
-            while True:
-                ret, frame = cap.read()
+            with tempfile.TemporaryDirectory() as temp_dir:
+                output_video_path = os.path.join(temp_dir, "output_video.mp4")
 
-                if not ret:
-                    break
+                while True:
+                    ret, frame = cap.read()
 
-                start_time = 3
-                stop_time = 9
-                current_time = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000.0
+                    if not ret:
+                        break
 
-                if start_time <= current_time <= stop_time:
-                    user_text_combined = f"{user_name}"
-                    prize_text_combined = f"You've won a {random_prize}"
+                    start_time = 3
+                    stop_time = 9
+                    current_time = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000.0
 
-                    max_width = 316
-                    max_height = 75
+                    if start_time <= current_time <= stop_time:
+                        user_text_combined = f"{user_name}"
+                        prize_text_combined = f"You've won a {random_prize}"
 
-                    frame = add_text_to_frame(frame, user_text_combined, (271, 864), max_width, max_height)
-                    frame = add_text_to_frame(frame, prize_text_combined, (271 , 899), max_width, max_height)
+                        max_width = 316
+                        max_height = 75
 
-                modified_frames.append(frame)
+                        frame = add_text_to_frame(frame, user_text_combined, (271, 864), max_width, max_height)
+                        frame = add_text_to_frame(frame, prize_text_combined, (271, 899), max_width, max_height)
 
-            cap.release()
+                    modified_frames.append(frame)
 
-            if modified_frames:
-                temp_file = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
-                output_video_path = temp_file.name
+                cap.release()
 
-                out = cv2.VideoWriter(output_video_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (modified_frames[0].shape[1], modified_frames[0].shape[0]))
+                if modified_frames:
+                    out = cv2.VideoWriter(output_video_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (modified_frames[0].shape[1], modified_frames[0].shape[0]))
 
-                for modified_frame in modified_frames:
-                    out.write(modified_frame)
+                    for modified_frame in modified_frames:
+                        out.write(modified_frame)
 
-                out.release()
-                temp_file.close()
+                    out.release()
 
-                socketio.emit('video_generated', {'video_path': output_video_path, 'phone_number': sender_phone_number})
+                    # Move the file to a non-temporary location before closing the temporary directory
+                    shutil.move(output_video_path, "static/output_video.mp4")
 
-                return jsonify({"status": "success", "message": "Video generation completed", "video_path": output_video_path})
-            else:
-                return jsonify({"status": "error", "message": "No frames to process"})
+                    socketio.emit('video_generated', {'video_path': "static/output_video.mp4", 'phone_number': sender_phone_number})
 
-        return jsonify({"status": "error", "message": "Invalid file type. Please provide a valid video."})
+                    return jsonify({"status": "success", "message": "Video generation completed", "video_path": "static/output_video.mp4"})
+                else:
+                    return jsonify({"status": "error", "message": "No frames to process"})
+
+            return jsonify({"status": "error", "message": "Invalid file type. Please provide a valid video."})
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
