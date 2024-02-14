@@ -141,7 +141,6 @@ CORS(app)
 socketio = SocketIO(app)
 
 video_path = "sample_video2.mp4"
-output_video_path = None  
 
 def add_text_to_frame(frame, text, position, max_width, max_height, font_scale=1.0):
     font = cv2.FONT_HERSHEY_DUPLEX
@@ -219,38 +218,41 @@ def process_video():
 
                 cap.release()
 
-                
-        if modified_frames:
-            out = cv2.VideoWriter(output_video_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (modified_frames[0].shape[1], modified_frames[0].shape[0]))
+                if modified_frames:
+                    out = cv2.VideoWriter(output_video_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (modified_frames[0].shape[1], modified_frames[0].shape[0]))
 
-            for modified_frame in modified_frames:
-                out.write(modified_frame)
+                    for modified_frame in modified_frames:
+                        out.write(modified_frame)
 
-            out.release()
+                    out.release()
 
-            socketio.emit('video_generated', {'video_path': output_video_path, 'phone_number': sender_phone_number})
+                    # Move the file to a non-temporary location before closing the temporary directory
+                    shutil.move(output_video_path, "static/output_video.mp4")
 
-            return jsonify({"status": "success", "message": "Video generation completed", "video_path": output_video_path})
-        else:
-            return jsonify({"status": "error", "message": "No frames to process"})
+                    socketio.emit('video_generated', {'video_path': "static/output_video.mp4", 'phone_number': sender_phone_number})
+
+                    return jsonify({"status": "success", "message": "Video generation completed", "video_path": "static/output_video.mp4"})
+                else:
+                    return jsonify({"status": "error", "message": "No frames to process"})
+
+            return jsonify({"status": "error", "message": "Invalid file type. Please provide a valid video."})
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
 
-
 @app.route('/result')
 def result():
-    global output_video_path  # Use the global variable to get the output video path
-    if output_video_path:
-        download_link = {
-            'mp4': '/download_video?format=mp4',
-            'avi': '/download_video?format=avi',
-            'mov': '/download_video?format=mov',
-        }
+    # Assuming you have a variable 'video_path' containing the path to the personalized video
+    video_path = "static/output_video.mp4"
+    
+    # Create a download link
+    download_link = {
+        'mp4': '/download_video?format=mp4',
+        'avi': '/download_video?format=avi',
+        'mov': '/download_video?format=mov',
+    }
 
-        return render_template('result.html', video_path=output_video_path, download_link=download_link)
-    else:
-        return jsonify({"status": "error", "message": "Video not generated yet"})
+    return render_template('result.html', video_path=video_path, download_link=download_link)
 
 @app.route('/download_video')
 def download_video():
