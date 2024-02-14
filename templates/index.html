@@ -1,23 +1,57 @@
+<!-- templates/index.html -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personalized Video</title>
+    <title>Personalized Video Editor</title>
 </head>
 <body>
-    <h1>Personalized Video Generator</h1>
-    <form id="nameForm" action="/process_video" method="post">
-        <label for="userName">Enter your name:</label>
+    <h1>Personalized Video Editor</h1>
+
+    <form id="videoForm">
+        <label for="userName">Enter Your Name:</label>
         <input type="text" id="userName" name="userName" required>
-        <br>
-        <input type="submit" value="Generate Personalized Video">
+        
+        <!-- Add any other form fields you need -->
+
+        <button type="button" onclick="processVideo()">Process Video</button>
     </form>
 
-    <h2>Generated Video</h2>
-    <video width="640" height="480" controls>
-        <source src="{{ url_for('serve_video', filename='output_video.mp4') }}" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
+    <script>
+        function processVideo() {
+            // You can use JavaScript to collect form data and make an AJAX request to the server
+            var userName = document.getElementById('userName').value;
+            
+            // Add other form data as needed
+
+            // Make an AJAX request to process the video
+            // Adjust the URL and data structure based on your API endpoint
+            fetch('/process_video', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userName: userName,
+                    // Add other form data here
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Handle the response from the server
+                console.log(data);
+
+                // Redirect to the result page or show a success message
+                window.location.href = '/result';
+            })
+            .catch(error => {
+                // Handle errors
+                console.error('Error:', error);
+            });
+        }
+    </script>
 </body>
 </html>

@@ -167,9 +167,6 @@ def handle_connect():
 def index():
     return render_template('index.html')
 
-@app.route('/result')
-def result():
-    return render_template('result.html')
 
 @app.route('/process_video', methods=['POST'])
 def process_video():
@@ -242,6 +239,34 @@ def process_video():
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
+
+@app.route('/result')
+def result():
+    # Assuming you have a variable 'video_path' containing the path to the personalized video
+    video_path = "static/output_video.mp4"
+    
+    # Create a download link
+    download_link = {
+        'mp4': '/download_video?format=mp4',
+        'avi': '/download_video?format=avi',
+        'mov': '/download_video?format=mov',
+    }
+
+    return render_template('result.html', video_path=video_path, download_link=download_link)
+
+@app.route('/download_video')
+def download_video():
+    # Get the requested format from the query parameters
+    requested_format = request.args.get('format', 'mp4')
+
+    # Assuming you have a variable 'video_path' containing the path to the personalized video
+    video_path = "static/output_video.mp4"
+
+    # Define the content type based on the requested format
+    content_type = f'video/{requested_format}'
+
+    # Provide the video file for download
+    return send_file(video_path, as_attachment=True, mimetype=content_type)
 
 @app.route('/static/<filename>')
 def serve_video(filename):
