@@ -1,62 +1,61 @@
-<!-- templates/index.html
-<!-- 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personalized Video Editor</title>
+    <title>Video Processing App</title>
 </head>
-<body>
-    <h1>Personalized Video Editor</h1>
 
-    <form id="videoForm">
-        <label for="userName">Enter Your Name:</label>
+<body>
+    <h1>Welcome to the Video Processing App</h1>
+    
+    <form id="videoForm" action="/process_video" method="post">
+        <label for="userName">Your Name:</label>
         <input type="text" id="userName" name="userName" required>
         
-        <!-- Add any other form fields you need -->
-<!-- 
-        <button type="button" onclick="processVideo()">Process Video</button>
+        <br>
+        
+        <button type="submit">Process Video</button>
     </form>
 
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.3/socket.io.js"></script>
+
     <script>
-        function processVideo() { -->
-            // You can use JavaScript to collect form data and make an AJAX request to the server
-            var userName = document.getElementById('userName').value;
-             -->
-//             // Add other form data as needed
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
 
-//             // Make an AJAX request to process the video
-//             // Adjust the URL and data structure based on your API endpoint
-//             fetch('/process_video', {
-//                 method: 'POST',
-//                 headers: {
-//                     'Content-Type': 'application/json',
-//                 },
-//                 body: JSON.stringify({
-//                     userName: userName,
-//                     // Add other form data here
-//                 }),
-//             })
-//             .then(response => response.json())
-//             .then(data => {
-//                 // Handle the response from the server
-//                 console.log(data);
+        socket.on('connect', function () {
+            console.log('Connected to server');
+        });
 
-//                 // Redirect to the result page or show a success message
-//                 window.location.href = '/result';
-//             })
-//             .catch(error => {
-//                 // Handle errors
-//                 console.error('Error:', error);
-//             });
-//         }
-//     </script>
-// </body>
-// </html> -->
+        socket.on('video_generated', function (data) {
+            console.log('Video generated:', data.video_url);
+            alert('Video generation completed! Check your result <a href="/result">here</a>.');
+        });
 
-<!DOCTYPE html>
+        // Replace with your Firebase configuration
+        var firebaseConfig = {
+            apiKey: "AIzaSyA5CP8vJnGcqQ6Cwx2uAgVRiSZW84z98OQ",
+            authDomain: "videoprocessingapi.firebaseapp.com",
+            projectId: "videoprocessingapi",
+            storageBucket: "videoprocessingapi.appspot.com",
+            messagingSenderId: "369253068455",
+            appId: "1:369253068455:web:be16e33c4618fbf2eeb582",
+            measurementId: "G-F6KLQ9CLRE"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+    </script>
+</body>
+
+</html>
+
+
+<!-- <!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -93,4 +92,4 @@
     </script>
 </body>
 
-</html>
+</html> -->
