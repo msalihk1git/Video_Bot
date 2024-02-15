@@ -1,5 +1,5 @@
-<!-- templates/index.html -->
-
+<!-- templates/index.html
+<!-- 
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,42 +16,81 @@
         <input type="text" id="userName" name="userName" required>
         
         <!-- Add any other form fields you need -->
-
+<!-- 
         <button type="button" onclick="processVideo()">Process Video</button>
     </form>
 
     <script>
-        function processVideo() {
+        function processVideo() { -->
             // You can use JavaScript to collect form data and make an AJAX request to the server
             var userName = document.getElementById('userName').value;
-            
-            // Add other form data as needed
+             -->
+//             // Add other form data as needed
 
-            // Make an AJAX request to process the video
-            // Adjust the URL and data structure based on your API endpoint
-            fetch('/process_video', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    userName: userName,
-                    // Add other form data here
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Handle the response from the server
-                console.log(data);
+//             // Make an AJAX request to process the video
+//             // Adjust the URL and data structure based on your API endpoint
+//             fetch('/process_video', {
+//                 method: 'POST',
+//                 headers: {
+//                     'Content-Type': 'application/json',
+//                 },
+//                 body: JSON.stringify({
+//                     userName: userName,
+//                     // Add other form data here
+//                 }),
+//             })
+//             .then(response => response.json())
+//             .then(data => {
+//                 // Handle the response from the server
+//                 console.log(data);
 
-                // Redirect to the result page or show a success message
-                window.location.href = '/result';
-            })
-            .catch(error => {
-                // Handle errors
-                console.error('Error:', error);
-            });
-        }
+//                 // Redirect to the result page or show a success message
+//                 window.location.href = '/result';
+//             })
+//             .catch(error => {
+//                 // Handle errors
+//                 console.error('Error:', error);
+//             });
+//         }
+//     </script>
+// </body>
+// </html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Processing App</title>
+</head>
+
+<body>
+    <h1>Welcome to the Video Processing App</h1>
+    
+    <form id="videoForm" action="/process_video" method="post">
+        <label for="userName">Your Name:</label>
+        <input type="text" id="userName" name="userName" required>
+        
+        <br>
+        
+        <button type="submit">Process Video</button>
+    </form>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.3/socket.io.js"></script>
+    <script>
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('connect', function () {
+            console.log('Connected to server');
+        });
+
+        socket.on('video_generated', function (data) {
+            console.log('Video generated:', data.video_path);
+            alert('Video generation completed! Check your result <a href="/result">here</a>.');
+        });
     </script>
 </body>
+
 </html>
