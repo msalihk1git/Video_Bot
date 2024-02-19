@@ -131,12 +131,17 @@ from flask_socketio import SocketIO
 from flask_cors import CORS  # Import CORS from the flask_cors extension
 import cloudinary
 from cloudinary import config as cloudinary_config, uploader
+import os
+from dotenv import load_dotenv 
+
+load_dotenv()
+
 
 # Configure Cloudinary
 cloudinary_config(
-    cloud_name='dnyqripva',
-    api_key='648727619819579',
-    api_secret='8IMHMm-1S4bxZ09DylKyKNS7Zfk'
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET")
 )
 
 import cv2
