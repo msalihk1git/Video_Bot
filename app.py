@@ -200,5 +200,23 @@ def send_video_message(user):
         # Mark the video as sent to prevent sending it again
         chat_sessions[user]["videoSent"] = True
 
-
 def send_message(user, message):
+    requests.post(
+        f"https://graph.facebook.com/v12.0/{phone_number_id}/messages?access_token={token}",
+        json={
+            "messaging_product": "whatsapp",
+            "to": user,
+            "text": {"body": message},
+        },
+        headers={"Content-Type": "application/json"},
+    )
+
+
+def handle_user_message(user, message):
+    # The chatbot does not respond further after sending the video,
+    # so you can leave this function empty or handle it as needed.
+    pass
+
+
+if __name__ == "__main__":
+    app.run(port=int(os.environ.get("PORT", 1337)))
