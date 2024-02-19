@@ -154,7 +154,7 @@ CORS(app)  # Add this line to enable CORS
 socketio = SocketIO(app)
 
 # Specified video path
-video_path = "sample_video2.mp4"
+video_path = r"https://asset.cloudinary.com/dnyqripva/123edc09b7acaad0d7ffcd67591bc6b6"
 
 def add_text_to_frame(frame, text, position, max_width, max_height, font_scale=1.0):
     font = cv2.FONT_HERSHEY_DUPLEX
