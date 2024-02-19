@@ -95,63 +95,40 @@
 </html> -->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personalized Video</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            font-size: 50px;
-            background-size: cover;
-            color: rgb(0, 0, 0); /* Set text color to contrast with the background */
-        }
-
-        h1 {
-            font-size: 2em;
-        }
-
-        img {
-            width: 15%; /* Adjust the width of the image as needed */
-            margin-bottom: 20px; /* Add bottom margin for spacing */
-        }
-
-        form {
-            text-align: center;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 20px;
-            border-radius: 10px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 10px;
-            font-size: 50px;
-        }
-
-        input {
-            font-size: 50px;
-        }
-
-        button {
-            font-size: 30px;
-            padding: 10px 20px;
-        }
-    </style>
+    <title>Video Processing App</title>
 </head>
+
 <body>
-    <img src="C:\Users\ansha\OneDrive\Desktop\Videotext\ruh.png">
-    <h1>Win Ramadan Prizes</h1>
-    <form id="nameForm" action="/process_video" method="post">
-        <label for="userName">Enter your name:</label>
+    <h1>Welcome to the Video Processing App</h1>
+
+    <form id="videoForm" action="/process_video" method="post">
+        <label for="userName">Your Name:</label>
         <input type="text" id="userName" name="userName" required>
+
         <br>
-        <button type="submit">Generate Personalized Video</button>
+
+        <button type="submit">Process Video</button>
     </form>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.3/socket.io.js"></script>
+
+    <script>
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('connect', function () {
+            console.log('Connected to server');
+        });
+
+        socket.on('video_generated', function (data) {
+            console.log('Video generated:', data.video_path);
+            alert('Video generation completed! Check your result <a href="/result">here</a>.');
+        });
+    </script>
 </body>
+
 </html>
