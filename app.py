@@ -204,8 +204,6 @@ def process_video():
             if not ret:
                 break
 
-            print("Processing frame...")
-
             # Assuming a constant start and stop time for demonstration
             start_time = 3
             stop_time = 7
