@@ -66,16 +66,14 @@ def process_video():
         if request.is_json:
             data = request.get_json()
             user_name = data.get('userName')
-            sender_phone_number = data.get('senderPhoneNumber')
         else:
             # If not JSON, assume form data
             user_name = request.form.get('userName')
-            sender_phone_number = request.form.get('senderPhoneNumber')
 
         # Validate user name
         if not user_name:
             return jsonify({"status": "error", "message": "Please enter your name"})
-       
+
         cap = cv2.VideoCapture(video_path)
         fps = cap.get(cv2.CAP_PROP_FPS)
 
@@ -126,7 +124,7 @@ def process_video():
         os.remove(temp_output_path)
 
         # Emit a socket event to inform the client about the generated video
-        socketio.emit('video_generated', {'video_path': cloudinary_url, 'phone_number': sender_phone_number})
+        socketio.emit('video_generated', {'video_path': cloudinary_url})
 
         return jsonify({"status": "success", "message": "Video generation completed", "video_path": cloudinary_url})
 
