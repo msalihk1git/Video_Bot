@@ -65,12 +65,12 @@ def process_video():
         # Check if the request is JSON
         if request.is_json:
             data = request.get_json()
+            user_name = data.get('userName')
+            sender_phone_number = data.get('senderPhoneNumber')
         else:
             # If not JSON, assume form data
-            data = request.form.to_dict()
-
-        user_name = data.get('userName')
-        sender_phone_number = data.get('senderPhoneNumber')
+            user_name = request.form.get('userName')
+            sender_phone_number = request.form.get('senderPhoneNumber')
 
         # Validate user name
         if not user_name:
