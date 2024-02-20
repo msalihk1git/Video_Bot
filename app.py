@@ -133,9 +133,7 @@ def result():
 @app.route('/process_video', methods=['POST'])
 def process_video():
     try:
-        data = request.get_json() if request.is_json else request.form.to_dict()
-        user_name = data.get('userName')
-        sender_phone_number = data.get('senderPhoneNumber')
+        user_name = request.form.get('userName')
 
         if not user_name:
             return jsonify({"status": "error", "message": "Please enter your name"})
@@ -190,7 +188,7 @@ def process_video():
         os.remove(temp_output_path)
 
         # Emit a socket event to inform the client about the generated video
-        socketio.emit('video_generated', {'video_path': cloudinary_url, 'phone_number': sender_phone_number})
+        socketio.emit('video_generated', {'video_path': cloudinary_url})
 
         return jsonify({"status": "success", "message": "Video generation completed", "video_path": cloudinary_url})
 
