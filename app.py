@@ -126,35 +126,20 @@
 # if __name__ == '__main__':
 #     socketio.run(app, debug=True)
 
-from flask import Flask, render_template, request, jsonify, send_from_directory
-from flask_socketio import SocketIO
-from flask_cors import CORS  # Import CORS from the flask_cors extension
-import cloudinary
-from cloudinary import config as cloudinary_config, uploader
 import os
-from dotenv import load_dotenv 
-
-load_dotenv()
-
-
-# Configure Cloudinary
-cloudinary_config(
-    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
-    api_key=os.getenv("CLOUDINARY_API_KEY"),
-    api_secret=os.getenv("CLOUDINARY_API_SECRET")
-)
-
 import cv2
-import numpy as np
+import cloudinary
+from flask import Flask, jsonify, request,render_template
+from cloudinary import config as cloudinary_config,uploader
 import random
-import os
 
 app = Flask(__name__)
-CORS(app)  # Add this line to enable CORS
-socketio = SocketIO(app)
 
-# Specified video path
-video_path = r"https://asset.cloudinary.com/dnyqripva/123edc09b7acaad0d7ffcd67591bc6b6"
+cloudinary.config(
+    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.environ.get("CLOUDINARY_API_KEY"),
+    api_secret=os.environ.get("CLOUDINARY_API_SECRET")
+)
 
 def add_text_to_frame(frame, text, position, max_width, max_height, font_scale=1.0):
     font = cv2.FONT_HERSHEY_DUPLEX
@@ -173,21 +158,12 @@ def add_text_to_frame(frame, text, position, max_width, max_height, font_scale=1
     cv2.putText(frame, text, (position_x, position_y), font, font_scale, font_color, font_thickness)
     return frame
 
-
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'mp4', 'avi', 'mov'}
-
-@socketio.on('connect')
-def handle_connect():
-    print('Client connected')
 
 @app.route('/')
 def index():
     return render_template('index.html')
-
-@app.route('/result')
-def result():
-    return render_template('result.html')
 
 @app.route('/process_video', methods=['POST'])
 def process_video():
@@ -206,42 +182,44 @@ def process_video():
         if not user_name:
             return jsonify({"status": "error", "message": "Please enter your name"})
 
-        # Validate file type
-        if os.path.isfile(video_path) and allowed_file(video_path):
-            cap = cv2.VideoCapture(video_path)
-            fps = cap.get(cv2.CAP_PROP_FPS)
+        # Get the Cloudinary video URL from somewhere (e.g., request data)
+        cloudinary_video_url = 'https://res.cloudinary.com/dnyqripva/video/upload/v1708341841/Copy_of_namith_ks_stskwn.mp4'
 
-            modified_frames = []
+        cap = cv2.VideoCapture(cloudinary_video_url)
+        fps = cap.get(cv2.CAP_PROP_FPS)
 
-            possible_prizes = ["10% OFF ON FOOTWEAR", "20%OFFER ON JEANS", "50% OFFER ON INNERWEAR", "75% OFFER ON TOPWEAR", "25% OFF ON TELEVISION", "GIFT CARD", "45% OFFER ON TV"]
-            random_prize = random.choice(possible_prizes)
+        modified_frames = []
 
-            while True:
-                ret, frame = cap.read()
+        possible_prizes = ["10% OFF ON FOOTWEAR", "20%OFFER ON JEANS", "50% OFFER ON INNERWEAR", "75% OFFER ON TOPWEAR", "25% OFF ON TELEVISION", "GIFT CARD", "45% OFFER ON TV"]
+        random_prize = random.choice(possible_prizes)
 
-                if not ret:
-                    break
+        while True:
+            ret, frame = cap.read()
 
-                start_time = 3
-                stop_time = 9
-                current_time = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000.0
+            if not ret:
+                break
 
-                if start_time <= current_time <= stop_time:
-                    user_text_combined = f"{user_name}"
-                    prize_text_combined = f"You've won a {random_prize}"
+            start_time = 3
+            stop_time = 9
+            current_time = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000.0
 
-                    max_width = 316
-                    max_height = 75
+            if start_time <= current_time <= stop_time:
+                user_text_combined = f"{user_name}"
+                prize_text_combined = f"You've won a {random_prize}"
 
-                    frame = add_text_to_frame(frame, user_text_combined, (271, 864), max_width, max_height)
-                    frame = add_text_to_frame(frame, prize_text_combined, (271 , 899), max_width, max_height)
+                max_width = 316
+                max_height = 75
 
-                modified_frames.append(frame)
+                frame = add_text_to_frame(frame, user_text_combined, (271, 864), max_width, max_height)
+                frame = add_text_to_frame(frame, prize_text_combined, (271 , 899), max_width, max_height)
 
-            cap.release()
+            modified_frames.append(frame)
 
-            if modified_frames:
-                output_video_path = "static/output_video.mp4"
+        cap.release()
+
+        if modified_frames:
+            # Output video path in the /tmp directory
+            output_video_path = "static\output_video.mp4"
             out = cv2.VideoWriter(output_video_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (modified_frames[0].shape[1], modified_frames[0].shape[0]))
 
             for modified_frame in modified_frames:
@@ -249,27 +227,15 @@ def process_video():
 
             out.release()
 
-            # Upload video to Cloudinary
-            cloudinary_response = uploader.upload(output_video_path, resource_type="video")
+            # Upload the output video to Cloudinary
+            upload_result = cloudinary.uploader.upload(output_video_path, resource_type="video")
+            cloudinary_video_url = upload_result['secure_url']
 
-            # Extract Cloudinary URL from the response
-            cloudinary_url = cloudinary_response['secure_url']
-
-            # Emit a socket event to inform the WhatsApp client about the generated video
-            socketio.emit('video_generated', {'video_path': cloudinary_url, 'phone_number': sender_phone_number})    
-
-            return jsonify({"status": "success", "message": "Video generation completed", "video_path": cloudinary_url})
-        else:   
+            return jsonify({"status": "success", "cloudinary_video_url": cloudinary_video_url})
+        else:
             return jsonify({"status": "error", "message": "No frames to process"})
-
-        return jsonify({"status": "error", "message": "Invalid file type. Please provide a valid video."})
-
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
 
-@app.route('/static/<filename>')
-def serve_video(filename):
-    return send_from_directory('static', filename)
-
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    app.run(debug=True)
