@@ -126,20 +126,31 @@
 # if __name__ == '__main__':
 #     socketio.run(app, debug=True)
 
-import os
-import cv2
+from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask_socketio import SocketIO
+from flask_cors import CORS  # Import CORS from the flask_cors extension
 import cloudinary
-from flask import Flask, jsonify, request,render_template
-from cloudinary import config as cloudinary_config,uploader
-import random
+from cloudinary import config as cloudinary_config, uploader
+import os
 
-app = Flask(__name__)
-
+# Configure Cloudinary
 cloudinary.config(
     cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
     api_key=os.environ.get("CLOUDINARY_API_KEY"),
     api_secret=os.environ.get("CLOUDINARY_API_SECRET")
 )
+
+import cv2
+import numpy as np
+import random
+import os
+
+app = Flask(__name__)
+CORS(app)  # Add this line to enable CORS
+socketio = SocketIO(app)
+
+# Specified video path
+video_path = 'https://res.cloudinary.com/dnyqripva/video/upload/v1708405239/output_video/display.mp4'
 
 def add_text_to_frame(frame, text, position, max_width, max_height, font_scale=1.0):
     font = cv2.FONT_HERSHEY_DUPLEX
@@ -158,12 +169,22 @@ def add_text_to_frame(frame, text, position, max_width, max_height, font_scale=1
     cv2.putText(frame, text, (position_x, position_y), font, font_scale, font_color, font_thickness)
     return frame
 
+
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'mp4', 'avi', 'mov'}
+    # Accept any file or Cloudinary URL
+    return True
+
+@socketio.on('connect')
+def handle_connect():
+    print('Client connected')
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/result')
+def result():
+    return render_template('result.html')
 
 @app.route('/process_video', methods=['POST'])
 def process_video():
@@ -182,10 +203,7 @@ def process_video():
         if not user_name:
             return jsonify({"status": "error", "message": "Please enter your name"})
 
-        # Get the Cloudinary video URL from somewhere (e.g., request data)
-        cloudinary_video_url = 'https://res.cloudinary.com/dnyqripva/video/upload/v1708341841/Copy_of_namith_ks_stskwn.mp4'
-
-        cap = cv2.VideoCapture(cloudinary_video_url)
+        cap = cv2.VideoCapture(video_path)
         fps = cap.get(cv2.CAP_PROP_FPS)
 
         modified_frames = []
@@ -197,7 +215,10 @@ def process_video():
             ret, frame = cap.read()
 
             if not ret:
+                print("No more frames to process.")
                 break
+
+            print("Processing frame...")
 
             start_time = 3
             stop_time = 9
@@ -211,31 +232,44 @@ def process_video():
                 max_height = 75
 
                 frame = add_text_to_frame(frame, user_text_combined, (271, 864), max_width, max_height)
-                frame = add_text_to_frame(frame, prize_text_combined, (271 , 899), max_width, max_height)
+                frame = add_text_to_frame(frame, prize_text_combined, (271, 899), max_width, max_height)
 
             modified_frames.append(frame)
 
         cap.release()
 
+        print(f"Number of frames processed: {len(modified_frames)}")
+
         if modified_frames:
-            # Output video path in the /tmp directory
-            output_video_path = "static\output_video.mp4"
-            out = cv2.VideoWriter(output_video_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (modified_frames[0].shape[1], modified_frames[0].shape[0]))
+            # Write the modified frames to a temporary video file
+            temp_output_path = 'temp_output.mp4'
+            out = cv2.VideoWriter(temp_output_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (modified_frames[0].shape[1], modified_frames[0].shape[0]))
 
             for modified_frame in modified_frames:
                 out.write(modified_frame)
 
             out.release()
 
-            # Upload the output video to Cloudinary
-            upload_result = cloudinary.uploader.upload(output_video_path, resource_type="video")
-            cloudinary_video_url = upload_result['secure_url']
+            # Upload the temporary video file to Cloudinary
+            cloudinary_response = uploader.upload(temp_output_path, resource_type="video", folder="output_video")
+            cloudinary_url = cloudinary_response['secure_url']
 
-            return jsonify({"status": "success", "cloudinary_video_url": cloudinary_video_url})
+            # Remove the temporary video file
+            os.remove(temp_output_path)
+
+            # Emit a socket event to inform the client about the generated video
+            socketio.emit('video_generated', {'video_path': cloudinary_url, 'phone_number': sender_phone_number})
+
+            return jsonify({"status": "success", "message": "Video generation completed", "video_path": cloudinary_url})
         else:
             return jsonify({"status": "error", "message": "No frames to process"})
+
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
 
+@app.route('/static/<filename>')
+def serve_video(filename):
+    return send_from_directory('static', filename)
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    socketio.run(app, debug=True)
