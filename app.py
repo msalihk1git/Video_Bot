@@ -14,9 +14,9 @@ possible_prizes = ["10% OFF ON FOOTWEAR", "20% OFFER ON JEANS", "50% OFFER ON IN
 app = Flask(__name__)
 
 cloudinary.config(
-    cloud_name="dnyqripva",
-    api_key="648727619819579",
-    api_secret="8IMHMm-1S4bxZ09DylKyKNS7Zfk"
+    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.environ.get("CLOUDINARY_API_KEY"),
+    api_secret=os.environ.get("CLOUDINARY_API_SECRET")
 )
 
 # Cloudinary URL for the input image
@@ -63,11 +63,11 @@ def calculate_font_scale(text, max_width, max_height, font, font_thickness):
 
 @app.route('/')
 def index():
-    return render_template('index1.html')
+    return render_template('index.html')
 
 @app.route('/result')
 def result():
-    return render_template('result1.html')
+    return render_template('result.html')
 
 @app.route('/process_image', methods=['POST'])
 def process_image():
