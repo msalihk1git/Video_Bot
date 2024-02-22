@@ -70,7 +70,7 @@ def index():
 def result():
     return render_template('result.html')
 
-@app.route('/process_image', methods=['POST','GET'])
+@app.route('/process_image', methods=['POST'])
 def process_image():
     try:
         # Retrieve user name from the submitted form
