@@ -74,11 +74,15 @@ def result():
 @app.route('/process_image', methods=['POST'])
 def process_image():
     try:
-        if request.is_json:
-            data = request.get_json()
+        # Retrieve the raw request data
+        raw_data = request.get_data()
+
+        # Attempt to load JSON data
+        try:
+            data = json.loads(raw_data.decode('utf-8'))
             user_name = data.get('userName')
-        else:
-            # If not JSON, use the form data method
+        except json.JSONDecodeError:
+            # If JSON decoding fails, assume it's form data
             user_name = request.form.get('userName')
 
         # Validate user name
