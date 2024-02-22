@@ -73,8 +73,13 @@ def result():
 @app.route('/process_image', methods=['POST'])
 def process_image():
     try:
-        # Retrieve user name from the submitted form
-        user_name = request.form.get('userName')
+        # Check if the request is sending JSON data
+        if request.is_json:
+            data = request.get_json()
+            user_name = data.get('userName')
+        else:
+            # If not JSON, use the form data method
+            user_name = request.form.get('userName')
 
         # Validate user name
         if not user_name:
