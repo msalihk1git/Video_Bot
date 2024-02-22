@@ -66,9 +66,9 @@ def calculate_font_scale(text, max_width, max_height, font, font_thickness):
 def index():
     return render_template('index.html')
 
-@app.route('/result')
-def result():
-    return render_template('result.html')
+# @app.route('/result')
+# def result():
+#     return render_template('result.html')
 
 @app.route('/process_image', methods=['POST'])
 def process_image():
