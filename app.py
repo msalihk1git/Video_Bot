@@ -74,7 +74,7 @@ def result():
 def process_image():
     try:
         # Retrieve user name from the submitted form
-        user_name = request.form.get('userName')
+        user_name = request.json.get('userName')
 
         # Validate user name
         if not user_name:
