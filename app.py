@@ -7,6 +7,7 @@ from io import BytesIO
 from PIL import Image
 import requests
 import random
+import os
 
 # Define possible prizes globally
 possible_prizes = ["10% OFF ON FOOTWEAR", "20% OFFER ON JEANS", "50% OFFER ON INNERWEAR", "75% OFFER ON TOPWEAR", "25% OFF ON TELEVISION", "GIFT CARD", "45% OFFER ON TV"]
