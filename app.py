@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, jsonify
-import json
 import cloudinary
 from cloudinary.uploader import upload as cloudinary_upload
 import cv2
@@ -74,16 +73,8 @@ def result():
 @app.route('/process_image', methods=['POST'])
 def process_image():
     try:
-        # Retrieve the raw request data
-        raw_data = request.get_data()
-
-        # Attempt to load JSON data
-        try:
-            data = json.loads(raw_data.decode('utf-8'))
-            user_name = data.get('userName')
-        except json.JSONDecodeError:
-            # If JSON decoding fails, assume it's form data
-            user_name = request.form.get('userName')
+        # Retrieve user name from the submitted form
+        user_name = request.form.get('userName')
 
         # Validate user name
         if not user_name:
