@@ -1,25 +1,19 @@
-<!-- templates/resultpage.html -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- ... -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalized Image Result</title>
+    <!-- Add any additional styles or meta tags as needed -->
 </head>
 <body>
-    <h1>Personalized Video Result</h1>
+    <h1>Personalized Image Result</h1>
     
-    <!-- Display the personalized video -->
-    <video width="640" height="360" controls>
-        <source src="{{ video_path }}" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
+    <!-- Display the personalized image -->
+    <img src="{{ image_path }}" alt="Personalized Image">
 
-    <!-- Provide download links for multiple formats -->
-    <p>Download Video:</p>
-    <ul>
-        {% for format, link in download_link.items() %}
-            <li><a href="{{ link }}" download>Download as {{ format | upper }}</a></li>
-        {% endfor %}
-    </ul>
+    <!-- Provide download link for the image -->
+    <p>Download Image:</p>
+    <a href="{{ image_path }}" download>Download Image</a>
 </body>
 </html>
