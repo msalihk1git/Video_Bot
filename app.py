@@ -89,7 +89,7 @@ def process_image():
         text_position = (810, 864)  # Adjust this position as needed
 
         # Add user's name to the image with adjusted font scale
-        user_font_scale = 1.5  # Adjust this value as needed
+        user_font_scale = 2.5  # Adjust this value as needed
         result_image = add_text_to_image(input_image, user_name, max_width, max_height, text_position, font_scale=user_font_scale)
 
         # Add random prize text below user's name
