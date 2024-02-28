@@ -21,7 +21,7 @@ cloudinary.config(
 )
 
 # Cloudinary URL for the input image
-input_image_url = 'https://res.cloudinary.com/dnyqripva/image/upload/v1708519385/input_video/Your_paragraph_text_1_gdhr9u.jpg'
+input_image_url = 'https://res.cloudinary.com/dnyqripva/image/upload/v1709107537/input_video/rooooo.jpg'
 
 def add_text_to_image(image, text, max_width, max_height, text_position, font_scale=1.0):
     # Convert the image to an OpenCV format (numpy array)
