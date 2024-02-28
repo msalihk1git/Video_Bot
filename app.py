@@ -93,12 +93,12 @@ def process_image():
         result_image = add_text_to_image(input_image, user_name, max_width, max_height, text_position, font_scale=user_font_scale)
 
         # Add random prize text below user's name
-        prize_text = f"You've won a {random.choice(possible_prizes)}"
-        prize_text_position = (text_position[0], text_position[1] + max_height + 20)  # Adjust vertical position as needed
+        # prize_text = f"You've won a {random.choice(possible_prizes)}"
+        # prize_text_position = (text_position[0], text_position[1] + max_height + 20)  # Adjust vertical position as needed
 
         # Increase the font scale for larger text
         prize_font_scale = 1.5  # Adjust this value as needed
-        result_image = add_text_to_image(result_image, prize_text, max_width, max_height, prize_text_position, font_scale=prize_font_scale)
+        # result_image = add_text_to_image(result_image, prize_text, max_width, max_height, prize_text_position, font_scale=prize_font_scale)
 
         # Save the modified image to a BytesIO object
         output_image_bytes = BytesIO()
